@@ -1,0 +1,41 @@
+# ============================================================
+# Bug Tracker Lite — Root .gitignore
+# ============================================================
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Environment variables (NEVER commit these)
+.env
+.env.local
+.env.*.local
+
+# Tauri
+apps/desktop/src-tauri/target/
+
+# Expo / React Native
+apps/android/.expo/
+apps/android/android/
+apps/android/ios/
+apps/android/node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
