@@ -1,0 +1,20 @@
+{
+  "name": "@bug-tracker/extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome Extension MV3 for Bug Tracker Lite",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "firebase": "^10.12.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "dotenv": "^17.4.2",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.4.5"
+  }
+}
