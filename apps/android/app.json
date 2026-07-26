@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Bug Tracker Lite",
+    "slug": "bug-tracker-lite",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "bugtracker",
+    "platforms": ["android"],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f0f11"
+      },
+      "package": "com.bugtrackerlite.app"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
