@@ -74,7 +74,7 @@ export const COLLECTIONS = {
 
 /** Firebase Storage path builder */
 export const storagePath = {
-  bugScreenshot: (uid: string, bugId: string) => `bugs/${uid}/${bugId}.png`,
+  bugScreenshot: (uid: string, bugId: string) => `${uid}/${bugId}.png`,
 } as const;
 
 /** Severity display config — colour + label used by all UI platforms */
