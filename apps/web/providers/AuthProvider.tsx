@@ -3,13 +3,13 @@
 /**
  * providers/AuthProvider.tsx
  *
- * React context that exposes the current Firebase Auth user across the entire app.
+ * React context that exposes the current Supabase Auth user across the entire app.
  * Wrap the root layout with <AuthProvider> so every page and component can call useAuth().
  *
  * What it does:
  *   - Subscribes to onAuthStateChanged once at the root
- *   - Exposes `user` (Firebase User | null) and `loading` (boolean)
- *   - `loading` is true until Firebase resolves the initial auth state (prevents flash)
+ *   - Exposes `user` (User | null) and `loading` (boolean)
+ *   - `loading` is true until Supabase resolves the initial auth state (prevents flash)
  *
  * Usage:
  *   import { useAuth } from '@/providers/AuthProvider';
@@ -25,7 +25,7 @@ import {
   ReactNode,
   ReactElement,
 } from 'react';
-import { User } from 'firebase/auth';
+import { User } from '@supabase/supabase-js';
 import { subscribeToAuthState } from '@/lib/auth';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactElemen
      *   - User  → user is logged in (token is valid)
      * Setting loading=false AFTER first fire prevents layout flash.
      */
-    const unsubscribe = subscribeToAuthState((firebaseUser) => {
+    const unsubscribe = subscribeToAuthState((firebaseUser: User | null) => {
       setUser(firebaseUser);
       setLoading(false);
     });

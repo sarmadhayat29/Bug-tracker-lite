@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'rea
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Bug, BugStatus, STATUS_CONFIG, SEVERITY_CONFIG } from '@bug-tracker/shared';
 import { getBug, updateBugStatus } from '../../lib/bugs';
-import { auth } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
 
 const STATUSES: { label: string, value: BugStatus }[] = [
   { label: 'Open', value: 'open' },
@@ -33,10 +33,11 @@ export default function BugDetailScreen() {
   }, [id]);
 
   const handleStatusChange = async (newStatus: BugStatus) => {
-    if (!bug || !auth.currentUser || bug.status === newStatus) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!bug || !session?.user || bug.status === newStatus) return;
     setUpdating(true);
     try {
-      await updateBugStatus({ id: bug.id, status: newStatus }, bug.status, auth.currentUser.uid, 'android');
+      await updateBugStatus({ id: bug.id, status: newStatus }, bug.status, session.user.id, 'android');
       setBug({ ...bug, status: newStatus });
     } catch (err) {
       console.error(err);

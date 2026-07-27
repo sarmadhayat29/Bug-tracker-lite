@@ -4,7 +4,7 @@
  * features/auth/components/LoginForm.tsx
  *
  * Login form component for the /login page.
- * Handles form state, validation, Firebase signIn(), and redirect.
+ * Handles form state, validation, Supabase signIn(), and redirect.
  *
  * This is a placeholder scaffold — the form structure is complete
  * but the submit handler calls the real signIn() from lib/auth.ts.

@@ -25,8 +25,9 @@ export function Topbar(): React.ReactElement {
     router.replace('/login');
   };
 
-  const initials = user?.displayName
-    ? user.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+  const displayName = user?.user_metadata?.display_name;
+  const initials = displayName
+    ? displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : user?.email?.slice(0, 2).toUpperCase() ?? '??';
 
   return (

@@ -1,43 +1,38 @@
 /**
  * apps/extension/src/auth.ts
  *
- * Firebase Auth helpers for the Chrome Extension popup.
- *
- * Auth persistence in MV3:
- * Firebase Auth's default web persistence (localStorage) is BLOCKED in
- * extension service workers (MV3). We store the auth token manually in
- * chrome.storage.local to persist login across browser sessions.
+ * Supabase Auth helpers for the Chrome Extension popup.
  */
 
-import {
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  User,
-} from 'firebase/auth';
-import { auth } from './firebase';
+import { User } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
 const TOKEN_KEY = 'bt_auth_uid';
 
-/** Sign in and persist the UID to chrome.storage.local */
+/** Sign in and persist the UID to chrome.storage.local (optional fallback) */
 export async function signIn(email: string, password: string): Promise<User> {
-  const credential = await signInWithEmailAndPassword(auth, email, password);
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  if (!data.user) throw new Error('No user returned');
+
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    await chrome.storage.local.set({ [TOKEN_KEY]: credential.user.uid });
+    await chrome.storage.local.set({ [TOKEN_KEY]: data.user.id });
   }
-  return credential.user;
+  return data.user;
 }
 
 /** Sign out and clear persisted UID */
 export async function signOut(): Promise<void> {
-  await firebaseSignOut(auth);
+  await supabase.auth.signOut();
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     await chrome.storage.local.remove(TOKEN_KEY);
   }
 }
 
 /** Returns the current user, or null if not signed in */
-export function getCurrentUser(): User | null {
-  return auth.currentUser;
+export async function getCurrentUser(): Promise<User | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user ?? null;
 }
 
 /** One-shot check: is a UID stored in chrome.storage? */

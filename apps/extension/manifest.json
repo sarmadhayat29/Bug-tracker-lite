@@ -12,10 +12,7 @@
   "host_permissions": [
     "http://localhost/*",
     "http://127.0.0.1/*",
-    "https://*.firebaseio.com/*",
-    "https://firestore.googleapis.com/*",
-    "https://identitytoolkit.googleapis.com/*",
-    "https://*.firebaseapp.com/*"
+    "https://*.supabase.co/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -34,8 +31,7 @@
       "matches": [
         "http://localhost/*",
         "http://127.0.0.1/*",
-        "https://*.firebaseapp.com/*",
-        "https://*.web.app/*"
+        "https://*.supabase.co/*"
       ],
       "js": ["dist/content.js"]
     }

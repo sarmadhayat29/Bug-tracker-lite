@@ -4,29 +4,26 @@
   "private": true,
   "description": "A minimal cross-platform bug tracking tool (internship MVP)",
   "scripts": {
-    "dev:web":        "pnpm --filter @bug-tracker/web dev",
-    "dev:desktop":    "pnpm --filter @bug-tracker/desktop dev",
-    "build:shared":   "pnpm --filter @bug-tracker/shared build",
-    "build:web":      "pnpm --filter @bug-tracker/web build",
-    "build:extension":"pnpm --filter @bug-tracker/extension build",
-    "build:desktop":  "pnpm --filter @bug-tracker/desktop build",
-    "android":        "pnpm --filter @bug-tracker/android start",
-    "lint":           "pnpm -r lint",
-    "type-check":     "pnpm -r type-check",
-
-    "firebase:deploy":         "firebase deploy",
-    "firebase:deploy:rules":   "firebase deploy --only firestore:rules,storage",
-    "firebase:deploy:indexes": "firebase deploy --only firestore:indexes",
-    "firebase:emulate":        "firebase emulators:start --only auth,firestore,storage",
-    "validate:env:web":        "node scripts/validate-env.mjs web",
-    "validate:env:android":    "node scripts/validate-env.mjs android"
+    "dev:web": "pnpm --filter @bug-tracker/web dev",
+    "dev:desktop": "pnpm --filter @bug-tracker/desktop dev",
+    "build:shared": "pnpm --filter @bug-tracker/shared build",
+    "build:web": "pnpm --filter @bug-tracker/web build",
+    "build:extension": "pnpm --filter @bug-tracker/extension build",
+    "build:desktop": "pnpm --filter @bug-tracker/desktop build",
+    "android": "pnpm --filter @bug-tracker/android start",
+    "lint": "pnpm -r lint",
+    "type-check": "pnpm -r type-check",
+    "validate:env:web": "node scripts/validate-env.mjs web",
+    "validate:env:android": "node scripts/validate-env.mjs android"
   },
   "devDependencies": {
-    "firebase-tools": "^13.12.0",
-    "typescript":     "^5.4.5"
+    "typescript": "^5.4.5"
   },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.8"
   }
 }

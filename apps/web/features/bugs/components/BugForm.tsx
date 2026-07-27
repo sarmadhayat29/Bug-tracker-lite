@@ -66,7 +66,7 @@ export function BugForm(): React.ReactElement {
           status:       'open',
           screenshotUrl: null,
           pageUrl:      null,
-          createdBy:    user.uid,
+          createdBy:    user.id,
         },
         screenshotBlob,
         'web',

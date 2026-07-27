@@ -1,6 +1,6 @@
-import { auth, db, storage } from './firebase';
+import { supabase } from './supabase';
 import { signIn, signOut } from './auth';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { User } from '@supabase/supabase-js';
 import { BugSeverity, createBug } from '@bug-tracker/shared';
 
 // UI Elements
@@ -38,7 +38,8 @@ function showView(view: HTMLElement) {
 }
 
 // --- Auth Logic ---
-onAuthStateChanged(auth, (user) => {
+supabase.auth.onAuthStateChange((event, session) => {
+  const user = session?.user ?? null;
   currentUser = user;
   if (user) {
     authStateDiv.innerHTML = `<button id="btn-logout" class="logout-btn">Log out</button>`;
@@ -47,6 +48,15 @@ onAuthStateChanged(auth, (user) => {
     initCapture();
   } else {
     authStateDiv.innerHTML = '';
+    showView(viewLogin);
+  }
+});
+
+// Initial session check
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) {
+    // handled by onAuthStateChange
+  } else {
     showView(viewLogin);
   }
 });
@@ -162,14 +172,13 @@ reportForm.addEventListener('submit', async (e) => {
 
   try {
     await createBug(
-      db,
-      storage,
+      supabase,
       {
         title: bugTitle.value,
         description: 'Captured via Chrome Extension.',
         severity: bugSeverity.value as BugSeverity,
         pageUrl: currentUrl,
-        createdBy: currentUser.uid,
+        createdBy: currentUser.id,
       },
       screenshotBlob,
       'extension'

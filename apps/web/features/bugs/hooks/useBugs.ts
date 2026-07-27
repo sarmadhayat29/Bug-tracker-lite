@@ -47,20 +47,20 @@ export function useBugs({ statusFilter }: UseBugsOptions = {}): UseBugsReturn {
     setError(null);
 
     const unsubscribe = subscribeToBugs(
-      user.uid,
-      (updatedBugs) => {
+      user.id,
+      (updatedBugs: Bug[]) => {
         setBugs(updatedBugs);
         setLoading(false);
       },
       statusFilter,
-      (err) => {
+      (err: Error) => {
         setError(err.message.includes('index') ? 'Firestore requires a composite index. Check console for the link.' : 'Failed to load bugs.');
         setLoading(false);
       }
     );
 
     // Cleanup: unsubscribe from Firestore listener on unmount or filter change
-    return unsubscribe;
+    return () => { unsubscribe.unsubscribe(); };
   }, [user, statusFilter]);
 
   return { bugs, loading, error };

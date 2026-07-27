@@ -44,18 +44,18 @@ export function useBug(bugId: string): UseBugReturn {
 
     const unsubscribe = subscribeToBug(
       bugId,
-      (updatedBug) => {
+      (updatedBug: Bug | null) => {
         setBug(updatedBug);
         setLoading(false);
         if (!updatedBug) setError('Bug not found or has been deleted.');
       },
-      (err) => {
+      (err: Error) => {
         setError('Failed to load bug details.');
         setLoading(false);
       }
     );
 
-    return unsubscribe;
+    return () => { unsubscribe.unsubscribe(); };
   }, [bugId]);
 
   // Status update handler
@@ -65,7 +65,7 @@ export function useBug(bugId: string): UseBugReturn {
     await updateBugStatus(
       { id: bug.id, status: newStatus },
       bug.status,
-      user.uid,
+      user.id,
       'web',
     );
     // State is updated automatically by onSnapshot!

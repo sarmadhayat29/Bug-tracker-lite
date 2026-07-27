@@ -3,8 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } fr
 import { Stack, useRouter } from 'expo-router';
 import { Bug, STATUS_CONFIG, SEVERITY_CONFIG } from '@bug-tracker/shared';
 import { getBugs } from '../../lib/bugs';
-import { auth } from '../../lib/firebase';
-import { signOut } from 'firebase/auth';
+import { supabase } from '../../lib/supabase';
 
 export default function BugListScreen() {
   const [bugs, setBugs] = useState<Bug[]>([]);
@@ -12,9 +11,10 @@ export default function BugListScreen() {
   const router = useRouter();
 
   const fetchBugs = useCallback(async () => {
-    if (!auth.currentUser) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
     try {
-      const data = await getBugs(auth.currentUser.uid);
+      const data = await getBugs(session.user.id);
       setBugs(data);
     } catch (err) {
       console.error('Failed to fetch bugs', err);
@@ -32,7 +32,7 @@ export default function BugListScreen() {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
   };
 
   const renderItem = ({ item }: { item: Bug }) => {

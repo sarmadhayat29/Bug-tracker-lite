@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator 
 import { Stack, useRouter } from 'expo-router';
 import { BugSeverity } from '@bug-tracker/shared';
 import { createBug } from '../../lib/bugs';
-import { auth } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
 
 const SEVERITIES: { label: string, value: BugSeverity }[] = [
   { label: 'Low', value: 'low' },
@@ -20,7 +20,8 @@ export default function CreateBugScreen() {
   const router = useRouter();
 
   const handleCreate = async () => {
-    if (!title || !description || !auth.currentUser) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!title || !description || !session?.user) return;
     setLoading(true);
     try {
       await createBug({
@@ -28,7 +29,7 @@ export default function CreateBugScreen() {
         description,
         severity,
         pageUrl: null,
-        createdBy: auth.currentUser.uid,
+        createdBy: session.user.id,
       }, 'android');
       router.back();
     } catch (err) {

@@ -4,8 +4,8 @@
  * features/auth/components/SignupForm.tsx
  *
  * Signup form component for the /signup page.
- * Calls signUp() from lib/auth.ts which creates both the Firebase
- * Auth account and the Firestore profile document atomically.
+ * Calls signUp() from lib/auth.ts which creates both the Supabase
+ * Auth account and the Postgres profile document atomically.
  */
 
 import React, { useState, FormEvent } from 'react';

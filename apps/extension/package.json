@@ -8,9 +8,6 @@
     "dev": "node build.mjs --watch",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-    "firebase": "^10.12.0"
-  },
   "devDependencies": {
     "@types/chrome": "^0.0.268",
     "dotenv": "^17.4.2",

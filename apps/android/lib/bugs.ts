@@ -1,10 +1,10 @@
 /**
  * apps/android/lib/bugs.ts
  *
- * Mobile wrapper around @bug-tracker/shared Bug Firestore CRUD operations.
+ * Mobile wrapper around @bug-tracker/shared Bug Supabase CRUD operations.
  */
 
-import { db } from './firebase';
+import { supabase } from './supabase';
 import {
   Bug,
   CreateBugPayload,
@@ -20,15 +20,15 @@ export async function createBug(
   payload: CreateBugPayload,
   platform: Platform = 'android',
 ): Promise<Bug> {
-  return sharedCreateBug(db, null, payload, null, platform);
+  return sharedCreateBug(supabase, payload, null, platform);
 }
 
 export async function getBug(bugId: string): Promise<Bug | null> {
-  return sharedGetBug(db, bugId);
+  return sharedGetBug(supabase, bugId);
 }
 
 export async function getBugs(uid: string): Promise<Bug[]> {
-  return sharedGetBugs(db, uid);
+  return sharedGetBugs(supabase, uid);
 }
 
 export async function updateBugStatus(
@@ -37,5 +37,5 @@ export async function updateBugStatus(
   uid: string,
   platform: Platform = 'android',
 ): Promise<void> {
-  return sharedUpdateBugStatus(db, payload, previousStatus, uid, platform);
+  return sharedUpdateBugStatus(supabase, payload, previousStatus, uid, platform);
 }

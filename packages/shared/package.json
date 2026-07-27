@@ -17,10 +17,10 @@
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-    "firebase": "^10.12.0"
-  },
   "devDependencies": {
     "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.8"
   }
 }

@@ -7,7 +7,7 @@
  *   - Authenticated → /dashboard
  *   - Not authenticated → /login
  *
- * Shows a full-screen spinner while Firebase resolves the initial auth state
+ * Shows a full-screen spinner while Supabase resolves the initial auth state
  * to prevent the flash of wrong content.
  */
 

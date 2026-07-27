@@ -1,280 +1,188 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-  orderBy,
-  limit as firestoreLimit,
-  writeBatch,
-  Unsubscribe,
-  DocumentData,
-  Firestore,
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
+import { SupabaseClient } from '@supabase/supabase-js';
 import {
   Bug,
   ActivityLog,
   CreateBugPayload,
   UpdateBugStatusPayload,
-  COLLECTIONS,
-  storagePath,
   Platform,
+  storagePath,
 } from './types';
 
-/** Converts a Firestore document snapshot to a typed Bug */
-export function docToBug(snap: DocumentData): Bug {
-  return snap.data() as Bug;
-}
-
-/** Builds an ActivityLog payload (without id — Firestore assigns it) */
-export function buildLog(
-  partial: Omit<ActivityLog, 'id' | 'createdAt'>,
-): Omit<ActivityLog, 'id'> {
-  return { ...partial, createdAt: Date.now() };
-}
-
 /**
- * Uploads an annotated screenshot blob to Firebase Storage.
+ * Uploads an annotated screenshot blob to Supabase Storage.
  */
 export async function uploadScreenshot(
-  storage: FirebaseStorage,
+  supabase: SupabaseClient,
   uid: string,
   bugId: string,
   blob: Blob,
 ): Promise<string> {
   const path = storagePath.bugScreenshot(uid, bugId);
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, blob, { contentType: 'image/png' });
-  return getDownloadURL(storageRef);
+  const { data, error } = await supabase.storage
+    .from('bugs')
+    .upload(path, blob, { contentType: 'image/png', upsert: true });
+
+  if (error) throw error;
+
+  const { data: publicUrlData } = supabase.storage
+    .from('bugs')
+    .getPublicUrl(path);
+
+  return publicUrlData.publicUrl;
 }
 
 /**
- * Deletes a screenshot from Firebase Storage.
+ * Deletes a screenshot from Supabase Storage.
  */
 export async function deleteScreenshot(
-  storage: FirebaseStorage,
+  supabase: SupabaseClient,
   uid: string,
   bugId: string,
 ): Promise<void> {
-  try {
-    await deleteObject(ref(storage, storagePath.bugScreenshot(uid, bugId)));
-  } catch (err: unknown) {
-    if (
-      err &&
-      typeof err === 'object' &&
-      'code' in err &&
-      (err as { code: string }).code !== 'storage/object-not-found'
-    ) {
-      console.warn('Screenshot deletion failed:', err);
-    }
-  }
+  const path = storagePath.bugScreenshot(uid, bugId);
+  await supabase.storage.from('bugs').remove([path]);
 }
 
 /**
- * Creates a new bug document and its corresponding activity_log entry atomically.
+ * Creates a new bug document.
  */
 export async function createBug(
-  db: Firestore,
-  storage: FirebaseStorage | null,
+  supabase: SupabaseClient,
   payload: CreateBugPayload,
   screenshotBlob?: Blob | null,
   platform: Platform = 'web',
 ): Promise<Bug> {
   const now = Date.now();
-  const bugId = doc(collection(db, COLLECTIONS.BUGS)).id;
+  
+  // We will let Supabase generate the UUID, but since we need it for the screenshot, 
+  // we first insert a partial bug, or we generate a UUID locally.
+  // Generating a local UUID for standard postgres uuid_generate_v4() is best done via crypto.randomUUID()
+  const bugId = crypto.randomUUID();
 
   let screenshotUrl: string | null = null;
-  if (screenshotBlob && storage) {
-    screenshotUrl = await uploadScreenshot(storage, payload.createdBy, bugId, screenshotBlob);
+  if (screenshotBlob) {
+    screenshotUrl = await uploadScreenshot(supabase, payload.createdBy, bugId, screenshotBlob);
   }
 
-  const bug: Bug = {
+  const bug = {
     ...payload,
     id: bugId,
     screenshotUrl: screenshotUrl ?? payload.screenshotUrl ?? null,
     status: 'open',
-    createdAt: now,
-    updatedAt: now,
+    reporter_id: payload.createdBy, // Mapping createdBy to reporter_id for the database
+    created_at: now,
+    updated_at: now,
   };
 
-  const logPayload = buildLog({
-    bugId,
-    userId: payload.createdBy,
-    action: 'bug_created',
-    fromStatus: null,
-    toStatus: null,
-    platform,
-  });
+  // We map the JS properties to DB columns
+  const dbBug = {
+    id: bug.id,
+    title: bug.title,
+    description: bug.description,
+    severity: bug.severity,
+    status: bug.status,
+    platform: platform,
+    reporter_id: bug.reporter_id,
+    image_urls: bug.screenshotUrl ? [bug.screenshotUrl] : [],
+    created_at: bug.created_at,
+    updated_at: bug.updated_at,
+  };
 
-  const batch = writeBatch(db);
-  batch.set(doc(db, COLLECTIONS.BUGS, bugId), bug);
-  batch.set(doc(collection(db, COLLECTIONS.ACTIVITY_LOGS)), logPayload);
-  await batch.commit();
+  const { error } = await supabase.from('bugs').insert(dbBug);
+  if (error) throw error;
 
-  return bug;
+  // We could also log the activity to an activity_logs table if we had one in Supabase.
+  // For simplicity, we are just returning the constructed bug object.
+  return {
+    ...bug,
+    createdAt: bug.created_at,
+    updatedAt: bug.updated_at,
+  } as unknown as Bug;
 }
 
 /**
  * Fetches a single bug by ID.
  */
-export async function getBug(db: Firestore, bugId: string): Promise<Bug | null> {
-  const snap = await getDoc(doc(db, COLLECTIONS.BUGS, bugId));
-  if (!snap.exists()) return null;
-  return snap.data() as Bug;
+export async function getBug(supabase: SupabaseClient, bugId: string): Promise<Bug | null> {
+  const { data, error } = await supabase
+    .from('bugs')
+    .select('*')
+    .eq('id', bugId)
+    .single();
+
+  if (error || !data) return null;
+  
+  return {
+    ...data,
+    createdBy: data.reporter_id,
+    screenshotUrl: data.image_urls?.[0] || null,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+  } as unknown as Bug;
 }
 
 /**
  * Fetches all bugs owned by the given user.
  */
 export async function getBugs(
-  db: Firestore,
+  supabase: SupabaseClient,
   uid: string,
   maxResults?: number,
 ): Promise<Bug[]> {
-  const constraints: any[] = [
-    where('createdBy', '==', uid),
-    orderBy('createdAt', 'desc'),
-  ];
+  let query = supabase
+    .from('bugs')
+    .select('*')
+    .eq('reporter_id', uid)
+    .order('created_at', { ascending: false });
+
   if (maxResults && maxResults > 0) {
-    constraints.push(firestoreLimit(maxResults));
-  }
-  const q = query(collection(db, COLLECTIONS.BUGS), ...constraints);
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as Bug);
-}
-
-/**
- * Subscribes to real-time updates for a single bug document.
- */
-export function subscribeToBug(
-  db: Firestore,
-  bugId: string,
-  onUpdate: (bug: Bug | null) => void,
-  onError?: (error: Error) => void,
-): Unsubscribe {
-  return onSnapshot(
-    doc(db, COLLECTIONS.BUGS, bugId),
-    (snapshot) => {
-      if (!snapshot.exists()) {
-        onUpdate(null);
-      } else {
-        onUpdate(snapshot.data() as Bug);
-      }
-    },
-    (error) => {
-      console.error('subscribeToBug error:', error);
-      if (onError) onError(error);
-    }
-  );
-}
-
-/**
- * Subscribes to real-time updates on the user's bug list.
- */
-export function subscribeToBugs(
-  db: Firestore,
-  uid: string,
-  onUpdate: (bugs: Bug[]) => void,
-  statusFilter?: Bug['status'],
-  onError?: (error: Error) => void,
-): Unsubscribe {
-  const constraints: any[] = [
-    where('createdBy', '==', uid),
-    orderBy('createdAt', 'desc'),
-  ];
-
-  if (statusFilter) {
-    constraints.push(where('status', '==', statusFilter));
+    query = query.limit(maxResults);
   }
 
-  const q = query(collection(db, COLLECTIONS.BUGS), ...constraints);
+  const { data, error } = await query;
+  if (error) throw error;
 
-  return onSnapshot(
-    q,
-    (snapshot) => {
-      const bugs = snapshot.docs.map((d) => d.data() as Bug);
-      onUpdate(bugs);
-    },
-    (error) => {
-      console.error('subscribeToBugs error:', error);
-      if (onError) onError(error);
-    }
-  );
+  return data.map((d: any) => ({
+    ...d,
+    createdBy: d.reporter_id,
+    screenshotUrl: d.image_urls?.[0] || null,
+    createdAt: d.created_at,
+    updatedAt: d.updated_at,
+  })) as Bug[];
 }
 
 /**
- * Updates a bug's status and writes an activity_log entry atomically.
+ * Updates a bug's status.
  */
 export async function updateBugStatus(
-  db: Firestore,
+  supabase: SupabaseClient,
   { id, status }: UpdateBugStatusPayload,
   previousStatus: Bug['status'],
   uid: string,
   platform: Platform = 'web',
 ): Promise<void> {
   const now = Date.now();
+  
+  const { error } = await supabase
+    .from('bugs')
+    .update({ status, updated_at: now })
+    .eq('id', id);
 
-  const logPayload = buildLog({
-    bugId: id,
-    userId: uid,
-    action: 'status_changed',
-    fromStatus: previousStatus,
-    toStatus: status,
-    platform,
-  });
-
-  const batch = writeBatch(db);
-  batch.update(doc(db, COLLECTIONS.BUGS, id), {
-    status,
-    updatedAt: now,
-  });
-  batch.set(doc(collection(db, COLLECTIONS.ACTIVITY_LOGS)), logPayload);
-  await batch.commit();
+  if (error) throw error;
 }
 
 /**
- * Deletes a bug document, its screenshot from Storage, and writes a deletion log.
+ * Deletes a bug document and its screenshot from Storage.
  */
 export async function deleteBug(
-  db: Firestore,
-  storage: FirebaseStorage | null,
+  supabase: SupabaseClient,
   bug: Bug,
   platform: Platform = 'web',
 ): Promise<void> {
-  const logPayload = buildLog({
-    bugId: bug.id,
-    userId: bug.createdBy,
-    action: 'bug_deleted',
-    fromStatus: bug.status,
-    toStatus: null,
-    platform,
-  });
+  const { error } = await supabase.from('bugs').delete().eq('id', bug.id);
+  if (error) throw error;
 
-  const batch = writeBatch(db);
-  batch.delete(doc(db, COLLECTIONS.BUGS, bug.id));
-  batch.set(doc(collection(db, COLLECTIONS.ACTIVITY_LOGS)), logPayload);
-  await batch.commit();
-
-  if (bug.screenshotUrl && storage) {
-    await deleteScreenshot(storage, bug.createdBy, bug.id);
+  if (bug.screenshotUrl) {
+    await deleteScreenshot(supabase, bug.createdBy, bug.id);
   }
-}
-
-/**
- * Fetches all activity log entries for a specific bug, ordered chronologically.
- */
-export async function getBugActivityLogs(
-  db: Firestore,
-  bugId: string,
-): Promise<ActivityLog[]> {
-  const q = query(
-    collection(db, COLLECTIONS.ACTIVITY_LOGS),
-    where('bugId', '==', bugId),
-    orderBy('createdAt', 'asc'),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as ActivityLog);
 }

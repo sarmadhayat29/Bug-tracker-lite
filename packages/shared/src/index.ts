@@ -1,14 +1,9 @@
 // Public API of @bug-tracker/shared
-// ─── Firebase ─────────────────────────────────────────────────────────────────
+// ─── Supabase ─────────────────────────────────────────────────────────────────
 export {
-  firebaseConfig,
-  getFirebaseApp,
-  assertFirebaseConfig,
-  app,
-  auth,
-  firestore,
-  db,
-} from './firebase/index';
+  getSupabaseApp,
+  assertSupabaseConfig,
+} from './supabase/index';
 
 // ─── Bug Firestore CRUD Operations ───────────────────────────────────────────
 export * from './bugs';

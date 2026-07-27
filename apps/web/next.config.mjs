@@ -4,12 +4,12 @@ const nextConfig = {
   transpilePackages: ['@bug-tracker/shared'],
   output: 'export',
   images: {
-    // Allow Firebase Storage images
+    // Allow Supabase Storage images
     unoptimized: true, // Required for static export
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
+        hostname: '*.supabase.co',
       },
     ],
   },
