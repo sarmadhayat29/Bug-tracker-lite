@@ -31,7 +31,7 @@ CREATE POLICY "Users can update own profile."
 
 -- Create Bugs Table
 CREATE TABLE public.bugs (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   severity TEXT NOT NULL, -- 'low' | 'medium' | 'high' | 'critical'
@@ -79,3 +79,6 @@ create policy "Authenticated Users can upload bug images"
 on storage.objects for insert
 to authenticated
 with check ( bucket_id = 'bugs' );
+
+-- Enable Realtime for the Bugs table
+ALTER PUBLICATION supabase_realtime ADD TABLE public.bugs;
