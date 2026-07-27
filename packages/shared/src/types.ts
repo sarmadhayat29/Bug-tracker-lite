@@ -14,10 +14,10 @@ export type Platform    = 'web' | 'extension' | 'android' | 'desktop';
 
 /** User profile stored in Firestore `profiles/{uid}` */
 export interface UserProfile {
-  uid:          string;           // Firebase Auth UID (mirrors document ID)
+  uid:          string;           // Supabase Auth UID (mirrors document ID)
   email:        string;           // User's email — immutable after creation
   displayName:  string | null;    // Optional display name
-  avatarUrl:    string | null;    // Firebase Storage or external URL
+  avatarUrl:    string | null;    // Supabase Storage or external URL
   bugCount:     number;           // Cached count — incremented on bug create/delete
   createdAt:    number;           // Unix timestamp ms — set once at signup
   lastSeenAt:   number;           // Unix timestamp ms — updated on login
@@ -30,9 +30,9 @@ export interface Bug {
   description:   string;          // Full bug details
   severity:      BugSeverity;     // low | medium | high | critical
   status:        BugStatus;       // open | in_progress | resolved
-  screenshotUrl: string | null;   // Firebase Storage download URL for annotated PNG
+  screenshotUrl: string | null;   // Supabase Storage download URL for annotated PNG
   pageUrl:       string | null;   // Page URL captured by Chrome extension
-  createdBy:     string;          // Firebase Auth UID — key for security rules
+  createdBy:     string;          // Supabase Auth UID — key for security rules
   createdAt:     number;          // Unix timestamp ms
   updatedAt:     number;          // Unix timestamp ms — updated on every write
 }
@@ -41,7 +41,7 @@ export interface Bug {
 export interface ActivityLog {
   id:         string;             // Firestore auto-ID
   bugId:      string;             // References bugs/{bugId}
-  userId:     string;             // Firebase Auth UID of the actor
+  userId:     string;             // Supabase Auth UID of the actor
   action:     LogAction;          // What happened
   fromStatus: BugStatus | null;   // Previous status (status_changed only)
   toStatus:   BugStatus | null;   // New status (status_changed only)
@@ -72,7 +72,7 @@ export const COLLECTIONS = {
   ACTIVITY_LOGS: 'activity_logs',
 } as const;
 
-/** Firebase Storage path builder */
+/** Supabase Storage path builder */
 export const storagePath = {
   bugScreenshot: (uid: string, bugId: string) => `${uid}/${bugId}.png`,
 } as const;

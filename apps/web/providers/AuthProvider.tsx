@@ -53,8 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactElemen
      *   - User  → user is logged in (token is valid)
      * Setting loading=false AFTER first fire prevents layout flash.
      */
-    const unsubscribe = subscribeToAuthState((firebaseUser: User | null) => {
-      setUser(firebaseUser);
+    const unsubscribe = subscribeToAuthState((supabaseUser: User | null) => {
+      setUser(supabaseUser);
       setLoading(false);
     });
 
