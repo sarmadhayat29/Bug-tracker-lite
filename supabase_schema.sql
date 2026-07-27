@@ -82,3 +82,46 @@ with check ( bucket_id = 'bugs' );
 
 -- Enable Realtime for the Bugs table
 ALTER PUBLICATION supabase_realtime ADD TABLE public.bugs;
+
+-- Create Storage Bucket for Downloads
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('downloads', 'downloads', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- RLS Policy for Downloads Storage Bucket
+DROP POLICY IF EXISTS "Downloads Public Read Access" ON storage.objects;
+CREATE POLICY "Downloads Public Read Access" ON storage.objects FOR SELECT TO public USING ( bucket_id = 'downloads' );
+
+/*
+===================================================================
+Supabase Storage CORS Configuration Instructions:
+-------------------------------------------------------------------
+To configure CORS (Cross-Origin Resource Sharing) for Supabase Storage:
+
+1. Via Supabase Dashboard:
+   - Go to Project Settings -> Storage -> CORS Configuration.
+   - Add/edit CORS rules to allow cross-origin requests for app downloads:
+     - Allowed Origins: * (or specific domain e.g., http://localhost:3000)
+     - Allowed Methods: GET, HEAD, OPTIONS
+     - Allowed Headers: *
+     - Max Age (seconds): 3600
+
+2. Via Supabase CLI / config.toml (Local Development):
+   - In supabase/config.toml under [storage]:
+     [storage.buckets.downloads]
+     public = true
+     file_size_limit = "100MiB"
+     allowed_mime_types = [
+       "application/vnd.android.package-archive",
+       "application/x-msdownload",
+       "application/zip"
+     ]
+
+3. Verification via HTTP OPTIONS Request:
+   - Run curl command to test preflight response:
+     curl -i -X OPTIONS "https://<PROJECT_REF>.supabase.co/storage/v1/object/public/downloads/builds/Android.apk" \
+       -H "Origin: http://localhost:3000" \
+       -H "Access-Control-Request-Method: GET"
+===================================================================
+*/
+

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:e2e:downloads": "node ../../scripts/test-e2e-downloads.mjs",
+    "test": "node ../../scripts/test-e2e-downloads.mjs"
   },
   "dependencies": {
     "@bug-tracker/shared": "workspace:*",
