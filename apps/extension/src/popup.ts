@@ -123,7 +123,7 @@ function loadCanvas(dataUrl: string) {
 function saveBlob() {
   canvas.toBlob((blob) => {
     screenshotBlob = blob;
-  }, 'image/png');
+  }, 'image/jpeg', 0.8);
 }
 
 function setupDrawing() {

@@ -20,7 +20,7 @@ export async function uploadScreenshot(
   const path = storagePath.bugScreenshot(uid, bugId);
   const { data, error } = await supabase.storage
     .from('bugs')
-    .upload(path, blob, { contentType: 'image/png', upsert: true });
+    .upload(path, blob, { contentType: blob.type || 'image/png', upsert: true });
 
   if (error) throw error;
 
