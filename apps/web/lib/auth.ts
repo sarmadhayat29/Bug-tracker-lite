@@ -5,7 +5,7 @@
  */
 
 import { supabase } from './supabase';
-import { CreateProfilePayload, UserProfile } from '@bug-tracker/shared';
+import { CreateProfilePayload, UserProfile, parseAuthError as parseAuthErrorMessage } from '@bug-tracker/shared';
 import { User, AuthError } from '@supabase/supabase-js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -18,11 +18,7 @@ export interface AuthResult {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function parseAuthError(error: AuthError): string {
-  switch (error.message) {
-    case 'User already registered':   return 'An account with this email already exists.';
-    case 'Invalid login credentials': return 'Incorrect email or password. Please try again.';
-    default:                          return error.message || 'Something went wrong. Please try again.';
-  }
+  return parseAuthErrorMessage(error.message);
 }
 
 // ─── Auth Functions ───────────────────────────────────────────────────────────

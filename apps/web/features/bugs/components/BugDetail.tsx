@@ -53,8 +53,12 @@ export function BugDetail({ bugId }: BugDetailProps): React.ReactElement {
   }
 
   const onConfirmDelete = async () => {
-    await handleDelete();
-    router.replace('/dashboard');
+    try {
+      await handleDelete();
+      router.replace('/dashboard');
+    } catch {
+      setShowDeleteModal(false);
+    }
   };
 
   return (

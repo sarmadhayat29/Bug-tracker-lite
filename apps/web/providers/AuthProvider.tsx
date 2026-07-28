@@ -35,10 +35,7 @@ export interface AuthContextValue {
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextValue>({
-  user:    null,
-  loading: true,
-});
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
@@ -84,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactElemen
  */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within <AuthProvider>');
+  if (ctx === undefined) {
+    throw new Error('useAuth must be used within <AuthProvider>');
+  }
   return ctx;
 }

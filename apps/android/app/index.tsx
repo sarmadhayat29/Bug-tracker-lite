@@ -1,25 +1,8 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Stack } from 'expo-router';
+import { parseAuthError, isValidEmail } from '@bug-tracker/shared';
 import { supabase } from '../lib/supabase';
-
-export function parseAuthError(message?: string): string {
-  if (!message) return 'An unexpected error occurred. Please try again.';
-  switch (message) {
-    case 'Invalid login credentials':
-      return 'Incorrect email or password. Please try again.';
-    case 'User already registered':
-      return 'An account with this email already exists.';
-    case 'Email not confirmed':
-      return 'Please verify your email address before signing in.';
-    default:
-      return message;
-  }
-}
-
-export function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-}
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');

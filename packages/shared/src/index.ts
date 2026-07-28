@@ -5,6 +5,9 @@ export {
   assertSupabaseConfig,
 } from './supabase/index';
 
+// ─── Auth Helpers ─────────────────────────────────────────────────────────────
+export { parseAuthError, isValidEmail } from './auth';
+
 // ─── Bug Firestore CRUD Operations ───────────────────────────────────────────
 export * from './bugs';
 
