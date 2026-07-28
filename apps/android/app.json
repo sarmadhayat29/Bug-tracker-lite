@@ -4,13 +4,13 @@
     "slug": "bug-tracker-lite",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assests/icon.PNG",
+    "icon": "./assets/icon.PNG",
     "userInterfaceStyle": "dark",
     "scheme": "bugtracker",
     "platforms": ["android"],
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assests/icon.PNG",
+        "foregroundImage": "./assets/icon.PNG",
         "backgroundColor": "#0f0f11"
       },
       "package": "com.bugtrackerlite.app"

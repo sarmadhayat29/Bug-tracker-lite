@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, checkSupabaseConfig } from '../lib/supabase';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
@@ -17,30 +17,33 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!process.env.EXPO_PUBLIC_SUPABASE_URL) {
-      setError('Supabase is not configured. Please check your .env file.');
-      setLoading(false);
-      return;
-    }
+    let subscription: any = null;
 
-    try {
-      supabase.auth.getSession().then(({ data: { session }, error }) => {
-        if (error) throw error;
+    async function initAuth() {
+      try {
+        checkSupabaseConfig();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
         setUser(session?.user ?? null);
+
+        const res = supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user ?? null);
+        });
+        subscription = res.data.subscription;
+      } catch (e: any) {
+        setError('Auth Initialization Error: ' + (e?.message || e));
+      } finally {
         setLoading(false);
-      });
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    } catch (e: any) {
-      setError('Auth Initialization Error: ' + e.message);
-      setLoading(false);
+      }
     }
+
+    initAuth();
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -48,16 +51,11 @@ export default function RootLayout() {
 
     const inAuthGroup = segments[0] === 'bugs';
 
-    // Use a small delay to ensure the Router is fully ready
-    const timeout = setTimeout(() => {
-      if (user && !inAuthGroup) {
-        router.replace('/bugs');
-      } else if (!user && inAuthGroup) {
-        router.replace('/');
-      }
-    }, 50);
-
-    return () => clearTimeout(timeout);
+    if (user && !inAuthGroup) {
+      router.replace('/bugs');
+    } else if (!user && inAuthGroup) {
+      router.replace('/');
+    }
   }, [user, loading, segments, error, router]);
 
   if (error) {

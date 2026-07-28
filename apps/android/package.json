@@ -5,13 +5,15 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "type-check": "tsc --noEmit"
+    "android": "expo run:android",
+    "type-check": "tsc --noEmit",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@bug-tracker/shared": "workspace:*",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/native": "^6.1.17",
+    "@supabase/supabase-js": "^2.43.4",
     "expo": "~51.0.0",
     "expo-constants": "~16.0.2",
     "expo-linking": "~6.3.1",
