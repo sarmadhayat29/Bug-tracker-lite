@@ -16,15 +16,18 @@ export default function BugDetailScreen() {
   const [bug, setBug] = useState<Bug | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadBug() {
       if (!id) return;
       try {
+        setError(null);
         const data = await getBug(id);
         setBug(data);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
+        setError(err?.message || 'Failed to load bug details.');
       } finally {
         setLoading(false);
       }
@@ -36,11 +39,13 @@ export default function BugDetailScreen() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!bug || !session?.user || bug.status === newStatus) return;
     setUpdating(true);
+    setError(null);
     try {
       await updateBugStatus({ id: bug.id, status: newStatus }, bug.status, session.user.id, 'android');
       setBug({ ...bug, status: newStatus });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err?.message || 'Failed to update status. Please try again.');
     } finally {
       setUpdating(false);
     }
@@ -50,6 +55,14 @@ export default function BugDetailScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator color="#6366f1" size="large" />
+      </View>
+    );
+  }
+
+  if (!bug && error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -65,6 +78,12 @@ export default function BugDetailScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'Bug Details' }} />
+
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{error}</Text>
+        </View>
+      )}
       
       <Text style={styles.title}>{bug.title}</Text>
       
@@ -189,5 +208,18 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#ef4444',
     fontSize: 16,
-  }
+  },
+  errorBanner: {
+    backgroundColor: '#ef444415',
+    borderColor: '#ef444430',
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 16,
+    borderRadius: 8,
+  },
+  errorBannerText: {
+    color: '#ef4444',
+    textAlign: 'center',
+    fontSize: 14,
+  },
 });

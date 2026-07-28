@@ -16,7 +16,8 @@
     "validate:env:web": "node scripts/validate-env.mjs web",
     "validate:env:android": "node scripts/validate-env.mjs android",
     "test:e2e:downloads": "node scripts/test-e2e-downloads.mjs",
-    "test": "node scripts/test-e2e-downloads.mjs"
+    "test:android": "node scripts/test-android-auth.mjs",
+    "test": "node scripts/test-e2e-downloads.mjs && node scripts/test-android-auth.mjs"
   },
   "devDependencies": {
     "typescript": "^5.4.5"

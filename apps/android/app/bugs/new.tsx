@@ -17,12 +17,14 @@ export default function CreateBugScreen() {
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<BugSeverity>('medium');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleCreate = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!title || !description || !session?.user) return;
     setLoading(true);
+    setError(null);
     try {
       await createBug({
         title,
@@ -32,8 +34,9 @@ export default function CreateBugScreen() {
         createdBy: session.user.id,
       }, 'android');
       router.back();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err?.message || 'Failed to create bug. Please try again.');
       setLoading(false);
     }
   };
@@ -42,6 +45,12 @@ export default function CreateBugScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ title: 'Report Bug' }} />
       
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
       <View style={styles.formGroup}>
         <Text style={styles.label}>Title</Text>
         <TextInput
@@ -163,5 +172,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  errorContainer: {
+    backgroundColor: '#ef444415',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ef444430',
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });

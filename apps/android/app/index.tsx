@@ -3,6 +3,24 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { Stack } from 'expo-router';
 import { supabase } from '../lib/supabase';
 
+export function parseAuthError(message?: string): string {
+  if (!message) return 'An unexpected error occurred. Please try again.';
+  switch (message) {
+    case 'Invalid login credentials':
+      return 'Incorrect email or password. Please try again.';
+    case 'User already registered':
+      return 'An account with this email already exists.';
+    case 'Email not confirmed':
+      return 'Please verify your email address before signing in.';
+    default:
+      return message;
+  }
+}
+
+export function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,8 +28,14 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -19,25 +43,17 @@ export default function LoginScreen() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (error) throw error;
-    } catch (err: any) {
-      console.error('Login error:', err.code);
-      switch (err.code) {
-        case 'auth/invalid-email':
-          setError('Invalid email address format.');
-          break;
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          setError('Invalid email or password.');
-          break;
-        case 'auth/too-many-requests':
-          setError('Too many failed attempts. Try again later.');
-          break;
-        default:
-          setError('An unexpected error occurred. Please try again.');
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password
+      });
+
+      if (authError) {
+        setError(parseAuthError(authError.message));
       }
+    } catch (err: any) {
+      setError(parseAuthError(err?.message));
+    } finally {
       setLoading(false);
     }
   };
@@ -67,6 +83,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               placeholder="intern@bugtracker.test"
               placeholderTextColor="#52525b"
+              editable={!loading}
             />
           </View>
 
@@ -79,6 +96,9 @@ export default function LoginScreen() {
               secureTextEntry
               placeholder="••••••••"
               placeholderTextColor="#52525b"
+              editable={!loading}
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
             />
           </View>
 

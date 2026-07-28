@@ -8,16 +8,19 @@ import { supabase } from '../../lib/supabase';
 export default function BugListScreen() {
   const [bugs, setBugs] = useState<Bug[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const fetchBugs = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return;
     try {
+      setError(null);
       const data = await getBugs(session.user.id);
       setBugs(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch bugs', err);
+      setError(err?.message || 'Failed to load bugs. Pull to refresh.');
     }
   }, []);
 
@@ -78,6 +81,12 @@ export default function BugListScreen() {
           )
         }} 
       />
+
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{error}</Text>
+        </View>
+      )}
 
       <FlatList
         data={bugs}
@@ -153,5 +162,19 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#a1a1aa',
     textAlign: 'center',
-  }
+  },
+  errorBanner: {
+    backgroundColor: '#ef444415',
+    borderColor: '#ef444430',
+    borderWidth: 1,
+    padding: 12,
+    margin: 16,
+    marginBottom: 0,
+    borderRadius: 8,
+  },
+  errorBannerText: {
+    color: '#ef4444',
+    textAlign: 'center',
+    fontSize: 14,
+  },
 });
