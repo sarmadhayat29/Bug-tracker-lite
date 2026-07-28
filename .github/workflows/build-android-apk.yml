@@ -45,23 +45,17 @@ jobs:
         working-directory: apps/android
         run: npx expo prebuild --platform android --non-interactive
 
-      - name: Build release APK
-        working-directory: ./apps/android/android
-        run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
       - name: Locate release APK
-        id: apk
-        run: |
-          APK_DIR="apps/android/android/app/build/outputs/apk"
+
           APK_PATH=$(find "$APK_DIR" -type f -name "*.apk" | grep "/release/" | head -n 1)
           if [ -z "$APK_PATH" ]; then
             echo "No release APK found under $APK_DIR"
             find "$APK_DIR" -type f || true
             exit 1
           fi
-          echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
           cp "$APK_PATH" Android.apk
 
       - name: Upload Android.apk

@@ -17,6 +17,7 @@
     "validate:env:android": "node scripts/validate-env.mjs android",
     "test:e2e:downloads": "node scripts/test-e2e-downloads.mjs",
     "test:android": "pnpm build:shared && node scripts/test-android-auth.mjs",
+    "package:builds": "node scripts/package-builds.mjs",
     "test": "node scripts/test-e2e-downloads.mjs && pnpm test:android"
   },
   "devDependencies": {

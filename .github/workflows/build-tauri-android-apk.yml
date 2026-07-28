@@ -1,0 +1,116 @@
+name: Build Tauri Android APK
+
+on:
+  workflow_dispatch:
+
+env:
+  CI: true
+
+jobs:
+  build-tauri-android-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r26d
+          local-cache: true
+
+      - name: Restore Android NDK symlinks
+        run: |
+          directory="${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          find "$directory" -type l | while read -r link; do
+            current_target=$(readlink "$link")
+            new_target="$directory/$(basename "$current_target")"
+            ln -sf "$new_target" "$link"
+          done
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm build:shared
+
+      - name: Initialize Tauri Android project
+        working-directory: apps/desktop
+        env:
+          NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: pnpm exec tauri android init --ci
+
+      - name: Create CI signing keystore
+        working-directory: apps/desktop/src-tauri/gen/android
+        run: |
+          keytool -genkeypair -noprompt -v \
+            -keystore tauri-ci-release.jks \
+            -alias tauri-ci \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass tauri-ci-pass -keypass tauri-ci-pass \
+            -dname "CN=Bug Tracker Lite, OU=Tauri CI, O=Bug Tracker Lite, C=US"
+          cat > keystore.properties <<EOF
+          password=tauri-ci-pass
+          keyAlias=tauri-ci
+          storeFile=tauri-ci-release.jks
+          EOF
+
+      - name: Build release APK
+        working-directory: apps/desktop
+        env:
+          NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+        run: pnpm exec tauri android build --apk --ci
+
+      - name: Locate APK
+        id: apk
+        run: |
+          APK_PATH=$(find apps/desktop/src-tauri/gen/android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No APK found"
+            find apps/desktop/src-tauri/gen/android/app/build/outputs -type f || true
+            exit 1
+          fi
+          echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          cp "$APK_PATH" Bug-Tracker-Lite-tauri-release.apk
+
+      - name: Upload Tauri Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bug-Tracker-Lite-tauri-release.apk
+          path: Bug-Tracker-Lite-tauri-release.apk
+          if-no-files-found: error

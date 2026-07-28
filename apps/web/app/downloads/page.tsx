@@ -11,7 +11,7 @@ const INITIAL_DOWNLOADS: Omit<DownloadItem, 'publicUrl' | 'loading' | 'error'>[]
     title: 'Android App',
     description: 'Native mobile application for tracking and reporting bugs on Android devices.',
     formatSize: 'APK • 48 MB',
-    storagePath: 'builds/Android.apk',
+    storagePath: 'Android.apk',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -22,8 +22,8 @@ const INITIAL_DOWNLOADS: Omit<DownloadItem, 'publicUrl' | 'loading' | 'error'>[]
   {
     title: 'Windows App',
     description: 'Native desktop installer for full-featured desktop bug tracking and annotation.',
-    formatSize: 'EXE • 75 MB',
-    storagePath: 'builds/Desktop.exe',
+    formatSize: 'EXE • v1.0.0',
+    storagePath: 'bug-tracker-lite_1.0.0_x64-setup.exe',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
@@ -36,7 +36,7 @@ const INITIAL_DOWNLOADS: Omit<DownloadItem, 'publicUrl' | 'loading' | 'error'>[]
     title: 'Chrome Extension',
     description: 'Web extension package for seamless web bug capture and instant reporting.',
     formatSize: 'ZIP • 12 MB',
-    storagePath: 'builds/ChromeExtension.zip',
+    storagePath: 'ChromeExtension.zip',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -59,7 +59,7 @@ export default function DownloadsPage(): React.ReactElement {
     try {
       const itemsWithUrls: DownloadItem[] = INITIAL_DOWNLOADS.map((item) => {
         try {
-          const { data } = supabase.storage.from('downloads').getPublicUrl(item.storagePath);
+          const { data } = supabase.storage.from('builds').getPublicUrl(item.storagePath);
           if (data?.publicUrl) {
             return {
               ...item,
