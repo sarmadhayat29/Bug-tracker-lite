@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 env:
+  CI: true
   EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
   EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
   ANDROID_GRADLE_DIR: apps/android/android
@@ -44,7 +45,7 @@ jobs:
 
       - name: Generate native Android project
         working-directory: apps/android
-        run: npx expo prebuild --platform android --non-interactive
+        run: npx expo prebuild --platform android
 
       - name: Verify Gradle wrapper location
         run: |
