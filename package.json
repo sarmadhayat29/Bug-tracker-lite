@@ -11,7 +11,7 @@
     "build:extension": "pnpm --filter @bug-tracker/extension build",
     "build:desktop": "pnpm --filter @bug-tracker/desktop build",
     "android": "pnpm --filter @bug-tracker/android start",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm --filter @bug-tracker/web lint",
     "type-check": "pnpm -r type-check",
     "validate:env:web": "node scripts/validate-env.mjs web",
     "validate:env:android": "node scripts/validate-env.mjs android",

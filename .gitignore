@@ -39,3 +39,13 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# Agent / local artifacts (not part of the app)
+.agents/
+PROJECT.md
+TEST_INFRA.md
+TEST_READY.md
+dist-builds/
+
+# Tauri generated schemas
+apps/desktop/src-tauri/gen/
