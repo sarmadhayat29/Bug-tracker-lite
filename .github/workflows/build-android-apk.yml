@@ -6,7 +6,6 @@ on:
 env:
   EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
   EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-  ANDROID_GRADLE_DIR: apps/android/android
 
 jobs:
   build-apk:
@@ -46,33 +45,17 @@ jobs:
         working-directory: apps/android
         run: npx expo prebuild --platform android --non-interactive
 
-      - name: Verify Gradle wrapper location
-        run: |
-          GRADLE_DIR="${{ env.ANDROID_GRADLE_DIR }}"
-          if [ ! -f "$GRADLE_DIR/gradlew" ]; then
-            echo "Expected Gradle wrapper at: $GRADLE_DIR/gradlew"
-            echo "Contents of apps/android:"
-            ls -la apps/android || true
-            exit 1
-          fi
-          echo "Gradle wrapper found at $GRADLE_DIR/gradlew"
-
-      - name: Build release APK
-        run: |
-          cd "${{ env.ANDROID_GRADLE_DIR }}"
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
 
       - name: Locate release APK
-        run: |
-          APK_DIR="${{ env.ANDROID_GRADLE_DIR }}/app/build/outputs/apk"
+
           APK_PATH=$(find "$APK_DIR" -type f -name "*.apk" | grep "/release/" | head -n 1)
           if [ -z "$APK_PATH" ]; then
             echo "No release APK found under $APK_DIR"
             find "$APK_DIR" -type f || true
             exit 1
           fi
-          echo "Found APK: $APK_PATH"
           cp "$APK_PATH" Android.apk
 
       - name: Upload Android.apk
