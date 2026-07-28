@@ -4,25 +4,7 @@
  */
 
 import assert from 'node:assert/strict';
-
-// Mirroring parseAuthError & isValidEmail helpers from apps/android/app/index.tsx
-function parseAuthError(message) {
-  if (!message) return 'An unexpected error occurred. Please try again.';
-  switch (message) {
-    case 'Invalid login credentials':
-      return 'Incorrect email or password. Please try again.';
-    case 'User already registered':
-      return 'An account with this email already exists.';
-    case 'Email not confirmed':
-      return 'Please verify your email address before signing in.';
-    default:
-      return message;
-  }
-}
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim() || '');
-}
+import { parseAuthError, isValidEmail } from '../packages/shared/dist/auth.js';
 
 console.log('🧪 Running Android Auth Logic Smoke Tests...\n');
 

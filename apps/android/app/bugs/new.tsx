@@ -37,6 +37,7 @@ export default function CreateBugScreen() {
     } catch (err: any) {
       console.error(err);
       setError(err?.message || 'Failed to create bug. Please try again.');
+    } finally {
       setLoading(false);
     }
   };

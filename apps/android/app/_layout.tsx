@@ -1,12 +1,10 @@
 import 'react-native-gesture-handler';
 import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { User } from '@supabase/supabase-js';
+import { User, Subscription } from '@supabase/supabase-js';
 import { supabase, checkSupabaseConfig } from '../lib/supabase';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-
-declare var process: any;
 
 export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
@@ -17,7 +15,7 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    let subscription: any = null;
+    let subscription: Subscription | null = null;
 
     async function initAuth() {
       try {

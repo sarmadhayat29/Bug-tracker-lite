@@ -60,24 +60,36 @@ export function useBug(bugId: string): UseBugReturn {
 
   // Status update handler
   const handleStatusChange = useCallback(async (newStatus: BugStatus) => {
-    if (!bug || !user) return;
+    if (!bug || !user || bug.status === newStatus) return;
     setUpdating(true);
-    await updateBugStatus(
-      { id: bug.id, status: newStatus },
-      bug.status,
-      user.id,
-      'web',
-    );
-    // State is updated automatically by onSnapshot!
-    setUpdating(false);
+    setError(null);
+    try {
+      await updateBugStatus(
+        { id: bug.id, status: newStatus },
+        bug.status,
+        user.id,
+        'web',
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update status.');
+    } finally {
+      setUpdating(false);
+    }
   }, [bug, user]);
 
   // Delete handler
   const handleDelete = useCallback(async () => {
     if (!bug) return;
     setDeleting(true);
-    await deleteBug(bug, 'web');
-    // Navigation back to dashboard is handled in the page component
+    setError(null);
+    try {
+      await deleteBug(bug, 'web');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete bug.');
+      throw err;
+    } finally {
+      setDeleting(false);
+    }
   }, [bug]);
 
   return { bug, loading, error, updating, deleting, handleStatusChange, handleDelete };
