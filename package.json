@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "A minimal cross-platform bug tracking tool (internship MVP)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev:web": "pnpm --filter @bug-tracker/web dev",
     "dev:desktop": "pnpm --filter @bug-tracker/desktop dev",

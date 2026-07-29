@@ -5,7 +5,6 @@ on:
 
 env:
   CI: true
-  NODE_ENV: production
   EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
   EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
   ANDROID_GRADLE_DIR: apps/android/android
@@ -46,7 +45,17 @@ jobs:
 
       - name: Generate native Android project
         working-directory: apps/android
+        env:
+          NODE_ENV: production
         run: npx expo prebuild --platform android
+
+      - name: Verify Metro can resolve expo-asset
+        working-directory: apps/android
+        env:
+          NODE_ENV: production
+        run: |
+          test -e node_modules/expo-asset || (echo "expo-asset is not linked in apps/android/node_modules" && exit 1)
+          node -e "require('expo/metro-config').getDefaultConfig(process.cwd())"
 
       - name: Verify Gradle wrapper location
         run: |
@@ -61,6 +70,8 @@ jobs:
 
       - name: Build release APK
         working-directory: apps/android/android
+        env:
+          NODE_ENV: production
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon
