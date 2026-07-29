@@ -19,6 +19,9 @@ export interface DownloadItem {
   publicUrl?: string | null;
   loading?: boolean;
   error?: string | boolean | null;
+  /** When true, the card stays visible but download is blocked (e.g. Coming Soon). */
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
 export interface DownloadCardProps {
@@ -30,9 +33,20 @@ export interface DownloadCardProps {
  * DownloadCard — Individual download item card displaying title, badge, description, and action button.
  */
 export function DownloadCard({ item, onRetry }: DownloadCardProps): React.ReactElement {
-  const { title, description, formatSize, icon, publicUrl, loading, error, storagePath } = item;
+  const {
+    title,
+    description,
+    formatSize,
+    icon,
+    publicUrl,
+    loading,
+    error,
+    storagePath,
+    disabled,
+    disabledMessage,
+  } = item;
 
-  const hasError = Boolean(error) || (!publicUrl && !loading);
+  const hasError = !disabled && (Boolean(error) || (!publicUrl && !loading));
 
   return (
     <Card className="flex flex-col justify-between h-full" hoverable data-testid={`download-card-${storagePath}`}>
@@ -61,6 +75,12 @@ export function DownloadCard({ item, onRetry }: DownloadCardProps): React.ReactE
             {description}
           </CardDescription>
 
+          {disabled && (
+            <p className="mt-3 text-xs text-text-secondary" data-testid="download-card-coming-soon">
+              {disabledMessage || 'Coming Soon'}
+            </p>
+          )}
+
           {hasError && (
             <div className="mt-3 rounded border border-red-500/20 bg-red-500/10 p-2.5 text-xs text-red-400 flex items-center justify-between gap-2" role="alert">
               <span>
@@ -72,7 +92,17 @@ export function DownloadCard({ item, onRetry }: DownloadCardProps): React.ReactE
       </div>
 
       <CardFooter className="pt-4 border-t border-surface-3">
-        {loading ? (
+        {disabled ? (
+          <Button
+            variant="secondary"
+            fullWidth
+            disabled
+            className="download-button-disabled-unavailable"
+            data-testid="download-button-coming-soon"
+          >
+            Coming Soon
+          </Button>
+        ) : loading ? (
           <Button variant="secondary" fullWidth disabled loading>
             Fetching link...
           </Button>
@@ -105,6 +135,7 @@ export function DownloadCard({ item, onRetry }: DownloadCardProps): React.ReactE
             rel="noopener noreferrer"
             download
             className="w-full inline-block"
+            data-testid={`download-link-${storagePath}`}
           >
             <Button variant="primary" fullWidth className="gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

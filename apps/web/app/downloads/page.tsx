@@ -6,12 +6,19 @@ import { DownloadCard, DownloadItem } from '@/components/downloads/DownloadCard'
 import { DownloadCardSkeleton } from '@/components/downloads/DownloadCardSkeleton';
 import { Button } from '@/components/ui/Button';
 
-const INITIAL_DOWNLOADS: Omit<DownloadItem, 'publicUrl' | 'loading' | 'error'>[] = [
+type DownloadSeed = Omit<DownloadItem, 'publicUrl' | 'loading' | 'error'> & {
+  disabled?: boolean;
+  disabledMessage?: string;
+};
+
+const INITIAL_DOWNLOADS: DownloadSeed[] = [
   {
     title: 'Android App',
     description: 'Native mobile application for tracking and reporting bugs on Android devices.',
-    formatSize: 'APK • 48 MB',
+    formatSize: 'APK • Coming Soon',
     storagePath: 'Android.apk',
+    disabled: true,
+    disabledMessage: 'Android build is temporarily unavailable.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -23,7 +30,7 @@ const INITIAL_DOWNLOADS: Omit<DownloadItem, 'publicUrl' | 'loading' | 'error'>[]
     title: 'Windows App',
     description: 'Native desktop installer for full-featured desktop bug tracking and annotation.',
     formatSize: 'EXE • v1.0.0',
-    storagePath: 'bug-tracker-lite_1.0.0_x64-setup.exe',
+    storagePath: 'Desktop.exe',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
@@ -58,6 +65,15 @@ export default function DownloadsPage(): React.ReactElement {
 
     try {
       const itemsWithUrls: DownloadItem[] = INITIAL_DOWNLOADS.map((item) => {
+        if (item.disabled) {
+          return {
+            ...item,
+            publicUrl: null,
+            loading: false,
+            error: null,
+          };
+        }
+
         try {
           const { data } = supabase.storage.from('builds').getPublicUrl(item.storagePath);
           if (data?.publicUrl) {
@@ -67,28 +83,30 @@ export default function DownloadsPage(): React.ReactElement {
               loading: false,
               error: null,
             };
-          } else {
-            return {
-              ...item,
-              publicUrl: null,
-              loading: false,
-              error: `Failed to generate public URL for ${item.title}`,
-            };
           }
-        } catch (err: any) {
+
           return {
             ...item,
             publicUrl: null,
             loading: false,
-            error: err?.message || 'Failed to resolve download URL',
+            error: `Failed to generate public URL for ${item.title}`,
+          };
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Failed to resolve download URL';
+          return {
+            ...item,
+            publicUrl: null,
+            loading: false,
+            error: message,
           };
         }
       });
 
       setDownloads(itemsWithUrls);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching download URLs:', err);
-      setError(err.message || 'Failed to load downloads storage bucket artifacts');
+      const message = err instanceof Error ? err.message : 'Failed to load downloads storage bucket artifacts';
+      setError(message);
     } finally {
       setLoading(false);
     }
